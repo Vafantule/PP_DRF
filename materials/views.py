@@ -14,7 +14,15 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 class LessonListView(generics.ListAPIView):
     """
-    Получение списка урока.
+    Контроллер получения списка урока.
+    """
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+
+
+class LessonCreateView(generics.CreateAPIView):
+    """
+    Контроллер создания урока.
     """
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
