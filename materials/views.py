@@ -26,3 +26,11 @@ class LessonCreateView(generics.CreateAPIView):
     """
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
+
+
+class LessonRetrieveView(generics.RetrieveAPIView):
+    """
+    Контроллер получения одного урока.
+    """
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
