@@ -34,3 +34,11 @@ class LessonRetrieveView(generics.RetrieveAPIView):
     """
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
+
+
+class LessonUpdateView(generics.UpdateAPIView):
+    """
+    Контроллер изменения одного урока.
+    """
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
