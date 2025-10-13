@@ -12,7 +12,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
 
 
-class LessonListView(generics.ListAPIView):
+class LessonListAPIView(generics.ListAPIView):
     """
     Контроллер получения списка урока.
     """
@@ -20,15 +20,14 @@ class LessonListView(generics.ListAPIView):
     serializer_class = LessonSerializer
 
 
-class LessonCreateView(generics.CreateAPIView):
+class LessonCreateAPIView(generics.CreateAPIView):
     """
     Контроллер создания урока.
     """
-    queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
 
 
-class LessonRetrieveView(generics.RetrieveAPIView):
+class LessonRetrieveAPIView(generics.RetrieveAPIView):
     """
     Контроллер получения одного урока.
     """
@@ -36,7 +35,7 @@ class LessonRetrieveView(generics.RetrieveAPIView):
     serializer_class = LessonSerializer
 
 
-class LessonUpdateView(generics.UpdateAPIView):
+class LessonUpdateAPIView(generics.UpdateAPIView):
     """
     Контроллер изменения одного урока.
     """
@@ -44,7 +43,7 @@ class LessonUpdateView(generics.UpdateAPIView):
     serializer_class = LessonSerializer
 
 
-class LessonDestroyView(generics.DestroyAPIView):
+class LessonDestroyAPIView(generics.DestroyAPIView):
     """
     Контроллер удаления одного урока.
     """
