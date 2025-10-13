@@ -42,3 +42,10 @@ class LessonUpdateView(generics.UpdateAPIView):
     """
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
+
+
+class LessonDestroyView(generics.DestroyAPIView):
+    """
+    Контроллер удаления одного урока.
+    """
+    queryset = Lesson.objects.all()
