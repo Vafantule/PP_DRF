@@ -79,7 +79,7 @@ class Payment(models.Model):
             errors["paid_course"] = "Укажите либо оплаченный курс, либо оплаченный урок."
             errors["paid_lesson"] = "Укажите либо оплаченный урок, либо оплаченный курс."
         if not self.paid_course and not self.paid_lesson:
-            errors["paid_course"] = "Необходимо указать оплаченный урок либо курс"
+            errors["paid_course"] = "Необходимо указать оплаченный урок либо курс."
         if self.amount is None or self.amount < 0:
             errors["amount"] = "Сумма оплаты должна быть больше 0."
         if errors:
