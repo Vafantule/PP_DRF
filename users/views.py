@@ -1,13 +1,15 @@
 from typing import List
 
+from django.contrib.auth import get_user_model
 from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets, permissions
-from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 
 from .models import Payment
-from .serializers import UserRegistrationSerializer, PaymentSerializer
+from .serializers import UserRegistrationSerializer, PaymentSerializer, UserProfileSerializer
+
+User = get_user_model()
 
 
 class UserRegistrationAPIView(generics.CreateAPIView):
@@ -15,7 +17,7 @@ class UserRegistrationAPIView(generics.CreateAPIView):
     Контроллер регистрации пользователя.
     """
     serializer_class = UserRegistrationSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [permissions.AllowAny]
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
@@ -43,3 +45,12 @@ class PaymentViewSet(viewsets.ModelViewSet):
             serializer.save(user=self.request.user)
         else:
             serializer.save()
+
+
+class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Контроллер для отображения профилей пользователей с историей платежей.
+    """
+    queryset = User.objects.all().prefetch_related("payments")
+    serializer_class = UserProfileSerializer
+    permission_classes = [permissions.AllowAny]

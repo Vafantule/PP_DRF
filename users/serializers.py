@@ -65,7 +65,7 @@ class UserProfileSerializer(ModelSerializer):
     """
     Сериализатор профиля пользователя с историей платежей.
     """
-    payments = PaymentListSerializer(many=True, read_only=True, source="payments")
+    payments = PaymentListSerializer(many=True, read_only=True)
     payments_count = SerializerMethodField(read_only=True)
 
     class Meta:
