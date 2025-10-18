@@ -68,3 +68,8 @@ class Payment(models.Model):
         verbose_name = "Платеж"
         verbose_name_plural = "Платежи"
         ordering = ["-paid_at"]
+
+    def __str__(self) -> str:
+        target = self.paid_course or self.paid_lesson
+        target_representative = getattr(target, "title", str(target)) if target else "—"
+        return f"Платеж №{self.pk} по {self.user} для {target_representative} ({self.amount})"
