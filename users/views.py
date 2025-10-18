@@ -18,7 +18,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
     """
     Контроллер платежей, реализация через ViewSet.
     """
-    queryset = Payment.objects.all().select_relater("user", "paid_course", "paid_lesson")
+    queryset = Payment.objects.all().select_related("user", "paid_course", "paid_lesson")
     serializer_class = PaymentSerializer
 
     def get_permissions(self) -> list[permissions.BasePermission]:
