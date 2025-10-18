@@ -1,13 +1,13 @@
 from typing import List
 
 from django.contrib.auth import get_user_model
-from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, viewsets, permissions
+from rest_framework import generics, permissions, viewsets
+from rest_framework.filters import OrderingFilter
 from rest_framework.request import Request
 
 from .models import Payment
-from .serializers import UserRegistrationSerializer, PaymentSerializer, UserProfileSerializer
+from .serializers import PaymentSerializer, UserProfileSerializer, UserRegistrationSerializer
 
 User = get_user_model()
 
@@ -39,9 +39,9 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer: PaymentSerializer) -> None:
         user = serializer.validated_data("user")
-        if user is None and (isinstance(self.request, Request) and
-                             self.request.user and
-                             self.request.user.is_authenticated):
+        if user is None and (isinstance(self.request, Request)
+                             and self.request.user
+                             and self.request.user.is_authenticated):
             serializer.save(user=self.request.user)
         else:
             serializer.save()

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from .models import Course, Lesson
 
 
@@ -24,4 +25,3 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def get_lessons_count(self, obj: Course) -> int:
         return obj.lessons.count()
-

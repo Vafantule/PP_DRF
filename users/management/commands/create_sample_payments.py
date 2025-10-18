@@ -4,7 +4,7 @@ from typing import Optional
 from django.contrib.auth import get_user_model
 from django.core.management import BaseCommand
 
-from materials.models import Lesson, Course
+from materials.models import Course, Lesson
 from users.models import Payment
 
 User = get_user_model()
@@ -34,7 +34,7 @@ class Command(BaseCommand):
             created_count += 1
             self.stdout.write(self.style.SUCCESS(f"По курсу {course.title} создан платеж: {payment_1}"))
         else:
-            self.stdout.write(self.style.WARNING(f"Курс не найден; платеж за курс не создан."))
+            self.stdout.write(self.style.WARNING("Курс не найден; платеж за курс не создан."))
 
         lesson: Optional[Lesson] = Lesson.objects.first()
 
@@ -48,9 +48,9 @@ class Command(BaseCommand):
             created_count += 1
             self.stdout.write(self.style.SUCCESS(f"По уроку {lesson.title} создан платеж: {payment_2}"))
         else:
-            self.stdout.write(self.style.WARNING(f"Урок не найден; платеж за урок не создан."))
+            self.stdout.write(self.style.WARNING("Урок не найден; платеж за урок не создан."))
 
         if created_count:
             self.stdout.write(self.style.SUCCESS(f"{created_count} платежей создано."))
         else:
-            self.stdout.write(self.style.ERROR(f"Ни одного платежа не создано."))
+            self.stdout.write(self.style.ERROR("Ни одного платежа не создано."))

@@ -1,8 +1,8 @@
 from django.urls import path
-from .apps import UsersConfig
-from .views import UserRegistrationAPIView, PaymentViewSet, UserProfileViewSet
 from rest_framework.routers import DefaultRouter
 
+from .apps import UsersConfig
+from .views import PaymentViewSet, UserProfileViewSet, UserRegistrationAPIView
 
 app_name = UsersConfig.name
 
