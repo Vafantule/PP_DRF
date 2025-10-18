@@ -49,3 +49,13 @@ class PaymentSerializer(ModelSerializer):
         if amount is None or amount < 0:
             raise ValidationError("Сумма оплаты должна быть больше 0.")
         return attrs
+
+
+class PaymentListSerializer(ModelSerializer):
+    """
+    Сериализатор для списка или истории платежей.
+    """
+    class Meta:
+        model = Payment
+        fields = "__all__"
+        read_only_fields = ["paid_at"]
