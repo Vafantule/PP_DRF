@@ -1,9 +1,38 @@
 from decimal import Decimal
+from typing import Any
 
 from django.conf import settings
+from django.contrib.auth.base_user import BaseUserManager
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+
+
+class CustomUserManager(BaseUserManager):
+    """
+    Менеджер для кастомной модели User.
+    """
+    use_in_migrations = True
+
+    def create_user(self, email: str, password: str, **extra_fields: Any) -> "User":
+        if not email:
+            raise ValueError("Email должен быть задан.")
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email: str, password: str, **extra_fields: Any) -> "User":
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Суперпользователь должен быть is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Суперпользователь должен быть is_superuser=True.")
+        return self.create_user(email, password, **extra_fields)
 
 
 class User(AbstractUser):
@@ -19,6 +48,8 @@ class User(AbstractUser):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    objects = CustomUserManager()
 
     class Meta:
         verbose_name = "Пользователь"
