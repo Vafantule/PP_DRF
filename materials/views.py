@@ -2,14 +2,16 @@ from rest_framework import generics, viewsets
 
 from materials.models import Course, Lesson
 from materials.serializers import CourseSerializer, LessonSerializer
+from users.permissions import IsAdminOrModeratorEditOnly
 
 
 class CourseViewSet(viewsets.ModelViewSet):
     """
     Контроллер курса, реализация через ViewSet.
     """
-    queryset = Course.objects.all()
+    queryset = Course.objects.all().prefetch_related("lessons")
     serializer_class = CourseSerializer
+    permission_classes = [IsAdminOrModeratorEditOnly]
 
 
 class LessonListAPIView(generics.ListAPIView):
