@@ -13,3 +13,8 @@ class IsAdminOrModeratorEditOnly(BasePermission):
         if not user or not user.is_authenticated:
             return False
         return user.groups.filter(name="moderators").exists()
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return False
