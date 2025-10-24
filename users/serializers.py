@@ -2,7 +2,7 @@ from typing import Any
 
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
 
 from .models import Payment
 
@@ -49,3 +49,29 @@ class PaymentSerializer(ModelSerializer):
         if amount is None or amount < 0:
             raise ValidationError("Сумма оплаты должна быть больше 0.")
         return attrs
+
+
+class PaymentListSerializer(ModelSerializer):
+    """
+    Сериализатор для списка или истории платежей.
+    """
+    class Meta:
+        model = Payment
+        fields = "__all__"
+        read_only_fields = ["paid_at"]
+
+
+class UserProfileSerializer(ModelSerializer):
+    """
+    Сериализатор профиля пользователя с историей платежей.
+    """
+    payments = PaymentListSerializer(many=True, read_only=True)
+    payments_count = SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = "__all__"
+        read_only_fields = ["email", "payment_count", "payments"]
+
+    def get_payments_count(self, obj: User) -> int:
+        return obj.payments.count()
