@@ -18,3 +18,6 @@ class IsAdminOrModeratorEditOnly(BasePermission):
         user = getattr(request, "user", None)
         if not user or not user.is_authenticated:
             return False
+
+        if getattr(user, "is_superuser", False):
+            return True
