@@ -95,3 +95,12 @@ class UserSerializer(ModelSerializer):
             return user
         user = User.objects.create_user(password=password, **validated_data)
         return user
+
+    def update(self, instance: User, validated_data: Dict[str, Any]) -> User:
+        password: Optional[str] = validated_data.pop("password", None)
+        for attribute, value in validated_data.items():
+            setattr(instance, attribute, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
