@@ -29,3 +29,10 @@ class IsAdminOrModeratorEditOnly(BasePermission):
 
         if request.method in ("PUT", "PATCH"):
             return is_moderator or getattr(user, "is_staff", False)
+
+        if request.method in ("POST", "DELETE"):
+            if is_moderator:
+                return False
+            return getattr(user, "is_staff", False)
+
+        return False
