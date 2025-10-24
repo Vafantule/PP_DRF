@@ -26,3 +26,6 @@ class IsAdminOrModeratorEditOnly(BasePermission):
 
         if request.method in SAFE_METHODS:
             return True
+
+        if request.method in ("PUT", "PATCH"):
+            return is_moderator or getattr(user, "is_staff", False)
