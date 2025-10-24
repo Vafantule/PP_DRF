@@ -18,8 +18,9 @@ class LessonListAPIView(generics.ListAPIView):
     """
     Контроллер получения списка урока.
     """
-    queryset = Lesson.objects.all()
+    queryset = Lesson.objects.all().select_related("course")
     serializer_class = LessonSerializer
+    permission_classes = [IsAdminOrModeratorEditOnly]
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
@@ -27,26 +28,30 @@ class LessonCreateAPIView(generics.CreateAPIView):
     Контроллер создания урока.
     """
     serializer_class = LessonSerializer
+    permission_classes = [IsAdminOrModeratorEditOnly]
 
 
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
     """
     Контроллер получения одного урока.
     """
-    queryset = Lesson.objects.all()
+    queryset = Lesson.objects.all().select_related("course")
     serializer_class = LessonSerializer
+    permission_classes = [IsAdminOrModeratorEditOnly]
 
 
 class LessonUpdateAPIView(generics.UpdateAPIView):
     """
     Контроллер изменения одного урока.
     """
-    queryset = Lesson.objects.all()
+    queryset = Lesson.objects.all().select_related("course")
     serializer_class = LessonSerializer
+    permission_classes = [IsAdminOrModeratorEditOnly]
 
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
     """
     Контроллер удаления одного урока.
     """
-    queryset = Lesson.objects.all()
+    queryset = Lesson.objects.all().select_related("course")
+    permission_classes = [IsAdminOrModeratorEditOnly]
