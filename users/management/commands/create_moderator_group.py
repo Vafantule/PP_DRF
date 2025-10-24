@@ -10,11 +10,11 @@ class Command(BaseCommand):
     """
     Команда для создания группы "moderators"  с заданными правами.
     """
-    def _get_permission(self, operation: str) -> Permission:
+    def _get_permission(self, codename: str) -> Permission:
         try:
-            return Permission.objects.get(operation=operation)
+            return Permission.objects.get(codename=codename)
         except Permission.DoesNotExist:
-            raise RuntimeError(f"Разрешение по операции '{operation}' не найдено.")
+            raise RuntimeError(f"Разрешение по операции '{codename}' не найдено.")
 
     def handle(self, *args, **options) -> None:
         group, created = Group.objects.get_or_create(name="moderators")
@@ -46,6 +46,6 @@ class Command(BaseCommand):
         group.permissions.add(*permissions_to_add)
 
         self.stdout.write(self.style.SUCCESS(f"Группе 'moderators' назначены права: "
-                                             f"{', '.join([permission.operation for permission in permissions_to_add])}"
+                                             f"{', '.join([permission.codename for permission in permissions_to_add])}"
         ))
         self.stdout.write(self.style.SUCCESS("Назначьте пользователей в группу 'moderators'."))
