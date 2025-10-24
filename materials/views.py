@@ -36,7 +36,21 @@ class LessonListAPIView(generics.ListAPIView):
     """
     queryset = Lesson.objects.all().select_related("course")
     serializer_class = LessonSerializer
-    permission_classes = [IsAdminOrModeratorEditOnly]
+    permission_classes = [IsOwnerOrModeratorOrAdmin]
+
+    def get_queryset(self) -> QuerySet[Lesson]:
+        queryset = super().get_queryset()
+        request = getattr(self, "request", None)
+        if request is None:
+            return queryset.none()
+        user = request.user
+        if getattr(user, "is_superuser", False) or user.groups.filter(name="moderators").exists():
+            return queryset
+        return queryset.filter(owner=user)
+
+    def perform_create(self, serializer: LessonSerializer) -> None:
+        request_user = getattr(self.request, "user", None)
+        serializer.save(owner=request_user)
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
@@ -44,7 +58,11 @@ class LessonCreateAPIView(generics.CreateAPIView):
     Контроллер создания урока.
     """
     serializer_class = LessonSerializer
-    permission_classes = [IsAdminOrModeratorEditOnly]
+    permission_classes = [IsOwnerOrModeratorOrAdmin]
+
+    def perform_create(self, serializer: LessonSerializer) -> None:
+        request_user = getattr(self.request, "user", None)
+        serializer.save(owner=request_user)
 
 
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
@@ -62,7 +80,7 @@ class LessonUpdateAPIView(generics.UpdateAPIView):
     """
     queryset = Lesson.objects.all().select_related("course")
     serializer_class = LessonSerializer
-    permission_classes = [IsAdminOrModeratorEditOnly]
+    permission_classes = [IsOwnerOrModeratorOrAdmin]
 
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
@@ -70,4 +88,4 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
     Контроллер удаления одного урока.
     """
     queryset = Lesson.objects.all().select_related("course")
-    permission_classes = [IsAdminOrModeratorEditOnly]
+    permission_classes = [IsOwnerOrModeratorOrAdmin]
