@@ -7,7 +7,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.request import Request
 
 from .models import Payment
-from .serializers import PaymentSerializer, UserProfileSerializer, UserRegistrationSerializer
+from .serializers import PaymentSerializer, UserProfileSerializer, UserRegistrationSerializer, UserSerializer
 
 User = get_user_model()
 
@@ -20,12 +20,25 @@ class UserRegistrationAPIView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
 
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    Контроллер для авторизированных пользователей.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self) -> List[permissions.BasePermission]:
+        return [permissions.IsAuthenticated()]
+
+
 class PaymentViewSet(viewsets.ModelViewSet):
     """
     Контроллер платежей, реализация через ViewSet.
     """
     queryset = Payment.objects.all().select_related("user", "paid_course", "paid_lesson")
     serializer_class = PaymentSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     filter_backends: List = [OrderingFilter, DjangoFilterBackend]
     filterset_fields = ["paid_course", "paid_lesson", "method"]
