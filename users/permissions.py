@@ -1,6 +1,6 @@
 from typing import Any
 
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
@@ -20,4 +20,9 @@ class IsAdminOrModeratorEditOnly(BasePermission):
             return False
 
         if getattr(user, "is_superuser", False):
+            return True
+
+        is_moderator = self._is_moderator(user)
+
+        if request.method in SAFE_METHODS:
             return True
