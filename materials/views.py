@@ -2,9 +2,8 @@ from django.db.models import QuerySet
 from rest_framework import generics, viewsets
 
 from materials.models import Course, Lesson
-from materials.permissions import IsOwnerOrModeratorOrAdmin
+from users.permissions import IsOwnerOrModeratorOrAdmin
 from materials.serializers import CourseSerializer, LessonSerializer
-from users.permissions import IsAdminOrModeratorEditOnly
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -16,14 +15,14 @@ class CourseViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwnerOrModeratorOrAdmin]
 
     def get_queryset(self) -> QuerySet[Course]:
-        queryset = super().get_queryset()
+        queryset_custom = super().get_queryset()
         request = getattr(self, "request", None)
         if request is None:
-            return queryset.none()
+            return queryset_custom.none()
         user = request.user
         if getattr(user, "is_superuser", False) or user.groups.filter(name="moderators").exists():
-            return queryset
-        return queryset.filter(owner=user)
+            return queryset_custom
+        return queryset_custom.filter(owner=user)
 
     def perform_create(self, serializer: CourseSerializer) -> None:
         request_user = getattr(self.request, "user", None)
@@ -39,14 +38,14 @@ class LessonListAPIView(generics.ListAPIView):
     permission_classes = [IsOwnerOrModeratorOrAdmin]
 
     def get_queryset(self) -> QuerySet[Lesson]:
-        queryset = super().get_queryset()
+        queryset_custom = super().get_queryset()
         request = getattr(self, "request", None)
         if request is None:
-            return queryset.none()
+            return queryset_custom.none()
         user = request.user
         if getattr(user, "is_superuser", False) or user.groups.filter(name="moderators").exists():
-            return queryset
-        return queryset.filter(owner=user)
+            return queryset_custom
+        return queryset_custom.filter(owner=user)
 
     def perform_create(self, serializer: LessonSerializer) -> None:
         request_user = getattr(self.request, "user", None)
@@ -71,7 +70,7 @@ class LessonRetrieveAPIView(generics.RetrieveAPIView):
     """
     queryset = Lesson.objects.all().select_related("course")
     serializer_class = LessonSerializer
-    permission_classes = [IsAdminOrModeratorEditOnly]
+    permission_classes = [IsOwnerOrModeratorOrAdmin]
 
 
 class LessonUpdateAPIView(generics.UpdateAPIView):
