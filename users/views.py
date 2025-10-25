@@ -51,7 +51,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated()]
 
     def perform_create(self, serializer: PaymentSerializer) -> None:
-        user = serializer.validated_data("user")
+        user = serializer.validated_data.get("user")
         if user is None and (isinstance(self.request, Request)
                              and self.request.user
                              and self.request.user.is_authenticated):

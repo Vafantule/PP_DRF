@@ -1,6 +1,6 @@
-from typing import Iterable
+from typing import List
 
-from django.contrib.auth.models import Permission, Group
+from django.contrib.auth.models import Group, Permission
 from django.core.management.base import BaseCommand
 
 from materials.models import Course, Lesson
@@ -30,8 +30,8 @@ class Command(BaseCommand):
             f"change_{Lesson._meta.model_name}"
         ]
 
-        permissions_to_add:Iterable[Permission] = []
-        missing:list[str] = []
+        permissions_to_add: List[Permission] = []
+        missing: List[str] = []
         for operation in desired_operations:
             try:
                 permission = self._get_permission(operation)
@@ -47,5 +47,5 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"Группе 'moderators' назначены права: "
                                              f"{', '.join([permission.codename for permission in permissions_to_add])}"
-        ))
+                                             ))
         self.stdout.write(self.style.SUCCESS("Назначьте пользователей в группу 'moderators'."))

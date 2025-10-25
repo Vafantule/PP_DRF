@@ -2,8 +2,8 @@ from django.db.models import QuerySet
 from rest_framework import generics, viewsets
 
 from materials.models import Course, Lesson
-from users.permissions import IsOwnerOrModeratorOrAdmin
 from materials.serializers import CourseSerializer, LessonSerializer
+from users.permissions import IsOwnerOrModeratorOrAdmin
 
 
 class CourseViewSet(viewsets.ModelViewSet):

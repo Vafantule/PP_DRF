@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional
 
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, CharField
+from rest_framework.serializers import CharField, ModelSerializer, SerializerMethodField
 
 from .models import Payment
 
