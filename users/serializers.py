@@ -1,8 +1,8 @@
-from typing import Any
+from typing import Any, Dict, Optional
 
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from rest_framework.serializers import CharField, ModelSerializer, SerializerMethodField
 
 from .models import Payment
 
@@ -75,3 +75,32 @@ class UserProfileSerializer(ModelSerializer):
 
     def get_payments_count(self, obj: User) -> int:
         return obj.payments.count()
+
+
+class UserSerializer(ModelSerializer):
+    """
+    Сериализатор CRUD для модели User.
+    """
+    password = CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = "__all__"
+        read_only_fields = ["is_staff"]
+
+    def create(self, validated_data: Dict[str, Any]) -> User:
+        password: Optional[str] = validated_data.pop("password", None)
+        if password is None:
+            user: User = User.objects.create(**validated_data)
+            return user
+        user = User.objects.create_user(password=password, **validated_data)
+        return user
+
+    def update(self, instance: User, validated_data: Dict[str, Any]) -> User:
+        password: Optional[str] = validated_data.pop("password", None)
+        for attribute, value in validated_data.items():
+            setattr(instance, attribute, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance

@@ -7,6 +7,8 @@ class LessonSerializer(serializers.ModelSerializer):
     """
     Сериализатор урока.
     """
+    owner = serializers.ReadOnlyField(source="owner.id")
+
     class Meta:
         model = Lesson
         fields = "__all__"
@@ -18,6 +20,7 @@ class CourseSerializer(serializers.ModelSerializer):
     """
     lessons_count = serializers.SerializerMethodField(read_only=True)
     lessons = LessonSerializer(many=True, read_only=True)
+    owner = serializers.ReadOnlyField(source="owner.id")
 
     class Meta:
         model = Course
