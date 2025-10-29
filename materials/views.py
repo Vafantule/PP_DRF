@@ -1,8 +1,15 @@
-from django.db.models import QuerySet
-from rest_framework import generics, viewsets
+from typing import Any
 
-from materials.models import Course, Lesson
-from materials.serializers import CourseSerializer, LessonSerializer
+from django.db.models import QuerySet
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import Course, Lesson, Subscription
+from .serializers import CourseSerializer, LessonSerializer, CourseSubscriptionSerializer
 from users.permissions import IsOwnerOrModeratorOrAdmin
 
 
@@ -88,3 +95,17 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
     """
     queryset = Lesson.objects.all().select_related("course")
     permission_classes = [IsOwnerOrModeratorOrAdmin]
+
+
+class CourseSubscriptionAPIView(APIView):
+    """
+    Контроллер APIView для подписки/отписки пользователя на курс.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request, course_id: int, *args: Any, **kwargs: Any) -> Response:
+        course = get_object_or_404(Course, pk=course_id)
+        subscription, created =Subscription.objects.get_or_create(user=request.user, course=course)
+        serializer = CourseSubscriptionSerializer(subscription, context={"request": request})
+        status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(serializer.data, status=status_code)
