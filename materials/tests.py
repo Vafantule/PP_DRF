@@ -170,3 +170,8 @@ class LessonAPITest(APITestCase):
         self.assertIn(response_custom.status_code, (status.HTTP_200_OK, status.HTTP_202_ACCEPTED))
         self.lesson_owned.refresh_from_db()
         self.assertEqual(self.lesson_owned.title, "Обновлено")
+
+    def test_other_cannot_update_not_owned_lesson(self) -> None:
+        self.auth_as(self.other)
+        response_custom = self.client.patch(self.lesson_update_url(self.lesson_owned.id), {"title": "Название"})
+        self.assertEqual(response_custom.status_code, status.HTTP_403_FORBIDDEN)
