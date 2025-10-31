@@ -24,14 +24,14 @@ class CourseAPITests(APITestCase):
         moderators_group, _ = Group.objects.get_or_create(name="moderators")
         moderators_group.user_set.add(cls.moderator)
 
-        cls.course_owner: Course = Course.objects.create(
+        cls.course_owned: Course = Course.objects.create(
             title="Владелец курса",
             description="Описание курса по владельцу",
             owner=cls.user_owner
         )
 
         cls.courses_list_url: str = "/courses/"
-        cls.course_detail_irl = lambda pk: f"/course/{pk}"
+        cls.course_detail_url = lambda pk: f"/courses/{pk}/"
 
     def setUp(self) -> None:
         self.client: APIClient= self.client
@@ -68,9 +68,8 @@ class CourseAPITests(APITestCase):
 
     def test_owner_can_update_own_course(self) -> None:
         self.auth_as(self.user_owner)
-        response_custom = self.client.patch(self.course_detail_irl(self.course_owned.id),
+        response_custom = self.client.patch(self.course_detail_url(self.course_owned.id),
                                             {"title": "Обновлено"}, format="json")
-        self.assertIn(response_custom, (status.HTTP_200_OK, status.HTTP_202_ACCEPTED))
-        self.course_owned.refresh_from_db(
-            self.assertEqual(self.course_owned.title, "Обновлено")
-        )
+        self.assertIn(response_custom.status_code, (status.HTTP_200_OK, status.HTTP_202_ACCEPTED))
+        self.course_owned.refresh_from_db()
+        self.assertEqual(self.course_owned.title, "Обновлено")
