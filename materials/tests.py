@@ -196,3 +196,7 @@ class LessonAPITest(APITestCase):
         self.assertIn(response_custom.status_code, (status.HTTP_204_NO_CONTENT, status.HTTP_200_OK))
         self.assertFalse(Lesson.objects.filter(pk=temp.id).exists())
 
+    def test_moderator_cannot_delete_lesson(self) -> None:
+        self.auth_as(self.moderator)
+        response_custom = self.client.delete(self.lesson_delete_url(self.lesson_owned.id))
+        self.assertEqual(response_custom.status_code, status.HTTP_403_FORBIDDEN)
