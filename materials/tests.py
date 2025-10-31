@@ -245,3 +245,11 @@ class SubscriptionAPITest(APITestCase):
         response_custom_2 = self.client.post(self.subscription_url(self.course.id))
         self.assertIn(response_custom_2.status_code, (status.HTTP_201_CREATED, status.HTTP_200_OK))
         self.assertEqual(Subscription.objects.filter(user=self.user_subscriber, course=self.course).count(), 1)
+
+    def test_unsubscribe_deletes_subscription(self) -> None:
+        self.auth_as(self.user_subscriber)
+        self.client.post(self.subscription_url(self.course.id))
+        self.assertTrue(Subscription.objects.filter(user=self.user_subscriber, course=self.course).exists())
+        response_custom = self.client.delete(self.subscription_url(self.course.id))
+        self.assertIn(response_custom.status_code, (status.HTTP_204_NO_CONTENT, status.HTTP_200_OK))
+        self.assertFalse(Subscription.objects.filter(user=self.user_subscriber, course=self.course).exists())
