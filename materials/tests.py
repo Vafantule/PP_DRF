@@ -163,3 +163,10 @@ class LessonAPITest(APITestCase):
         self.assertEqual(response_custom.status_code, status.HTTP_200_OK)
         data = response_custom.json()
         self.assertEqual(data.get("id"), self.lesson_owned.id)
+
+    def test_owner_can_update_own_lesson(self) -> None:
+        self.auth_as(self.owner)
+        response_custom = self.client.patch(self.lesson_update_url(self.lesson_owned.id),{"title": "Обновлено"})
+        self.assertIn(response_custom.status_code, (status.HTTP_200_OK, status.HTTP_202_ACCEPTED))
+        self.lesson_owned.refresh_from_db()
+        self.assertEqual(self.lesson_owned.title, "Обновлено")
