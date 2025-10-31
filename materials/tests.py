@@ -3,9 +3,10 @@ from typing import Optional, Dict, Any
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from rest_framework import status
+from rest_framework.status import HTTP_201_CREATED
 from rest_framework.test import APITestCase, APIClient
 
-from .models import Course
+from .models import Course, Lesson
 
 User = get_user_model()
 
@@ -85,3 +86,58 @@ class CourseAPITests(APITestCase):
         self.auth_as(self.moderator)
         response_custom = self.client.delete(self.course_detail_url(self.course_owned.id))
         self.assertEqual(response_custom.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class LessonAPITest(APITestCase):
+    """
+    Тесты для Lesson CRUD.
+    """
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.superuser: User = User.objects.create_superuser(email="admin@example.com", password="adminpassword")
+        cls.moderator: User = User.objects.create_user(email="moderator@example.com", password="moderatorpasword")
+        cls.owner: User = User.objects.create_user(email="owner@example.com", password="ownerpassword")
+        cls.other: User = User.objects.create_user(email="other@example.com", password="otherpassword")
+
+        moderators_group, _ = Group.objects.get_or_create(name="moderators")
+        moderators_group.user_set.add(cls.moderator)
+
+        cls.course: Course = Course.objects.create(
+            title="Курс",
+            description="Описание курса",
+            owner=cls.owner
+        )
+        cls.lesson_owned: Lesson = Lesson.objects.create(
+            title="Владелец урока",
+            description="Описание урока по владельцу",
+            course=cls.course,
+            owner=cls.owner,
+            video_url="https://www.youtube.com/watch?v=qwerty321",
+        )
+
+        cls.lessons_list_url: str = "/lessons/"
+        cls.lesson_detail_url = lambda pk: f"/lessons/{pk}/"
+
+    def setUp(self) -> None:
+        self.client: APIClient= self.client
+
+    def auth_as(self, user: Optional[User]) -> None:
+        if user is None:
+            self.client.force_authenticate(user=None)
+        else:
+            self.client.force_authenticate(user=user)
+
+    def test_owner_can_create_lesson(self) -> None:
+        self.auth_as(self.owner)
+        payload: Dict[str, Any] = {
+            "title": "Урок",
+            "description": "Описание урока",
+            "course": self.course.id,
+            "video_url": "https://youtube.com/qwerty321",
+        }
+        response_custom = self.client.post(self.lessons_list_url, payload, format="json")
+        self.assertIn(response_custom.status_code, (HTTP_201_CREATED, status.HTTP_200_OK))
+        if response_custom.status_code == status.HTTP_201_CREATED:
+            data = response_custom.json()
+            self.assertEqual(int(data.get("owner")), self.owner.id)
