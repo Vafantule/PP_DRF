@@ -237,3 +237,11 @@ class SubscriptionAPITest(APITestCase):
         response_custom = self.client.post(self.subscription_url(self.course.id))
         self.assertIn(response_custom.status_code, (status.HTTP_201_CREATED, status.HTTP_200_OK))
         self.assertTrue(Subscription.objects.filter(user=self.user_subscriber, course=self.course).exists())
+
+    def test_subscribe_idempotent(self) -> None:
+        self.auth_as(self.user_subscriber)
+        response_custom_1 = self.client.post(self.subscription_url(self.course.id))
+        self.assertIn(response_custom_1.status_code, (status.HTTP_201_CREATED, status.HTTP_200_OK))
+        response_custom_2 = self.client.post(self.subscription_url(self.course.id))
+        self.assertIn(response_custom_2.status_code, (status.HTTP_201_CREATED, status.HTTP_200_OK))
+        self.assertEqual(Subscription.objects.filter(user=self.user_subscriber, course=self.course).count(), 1)
