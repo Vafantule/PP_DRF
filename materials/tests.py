@@ -182,3 +182,17 @@ class LessonAPITest(APITestCase):
         self.assertEqual(response_custom.status_code, status.HTTP_200_OK)
         self.lesson_owned.refresh_from_db()
         self.assertEqual(self.lesson_owned.title, "Название 1")
+
+    def owner_can_delete_own_lesson(self) -> None:
+        temp = Lesson.objects.create(
+            title="Название урока",
+            description="Описание урока",
+            сourse=self.course,
+            owner=self.owner,
+            video_url="https://youtube.com/1"
+        )
+        self.auth_as(self.owner)
+        response_custom = self.client.delete(self.lesson_delete_url(temp.id))
+        self.assertIn(response_custom.status_code, (status.HTTP_204_NO_CONTENT, status.HTTP_200_OK))
+        self.assertFalse(Lesson.objects.filter(pk=temp.id).exists(course=self.course))
+
