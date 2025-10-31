@@ -175,3 +175,10 @@ class LessonAPITest(APITestCase):
         self.auth_as(self.other)
         response_custom = self.client.patch(self.lesson_update_url(self.lesson_owned.id), {"title": "Название"})
         self.assertEqual(response_custom.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_moderator_can_update_any_lesson(self) -> None:
+        self.auth_as(self.moderator)
+        response_custom = self.client.patch(self.lesson_update_url(self.lesson_owned.id), {"title": "Название 1"})
+        self.assertEqual(response_custom.status_code, status.HTTP_200_OK)
+        self.lesson_owned.refresh_from_db()
+        self.assertEqual(self.lesson_owned.title, "Название 1")
