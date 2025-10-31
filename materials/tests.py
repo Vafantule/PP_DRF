@@ -144,3 +144,4 @@ class LessonAPITest(APITestCase):
         if response_custom.status_code == status.HTTP_201_CREATED:
             data = response_custom.json()
             self.assertEqual(int(data.get("owner")), self.owner.id)
+            self.assertTrue(Lesson.objects.filter(pk=data.get("id"), owner=self.owner). exists())
