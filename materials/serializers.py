@@ -46,8 +46,8 @@ class CourseSubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        fields = ["id", "user", "course", "created_ad"]
-        read_onl_fields = ["id", "user", "created_ad"]
+        fields = ["id", "user", "course", "created_at"]
+        read_onl_fields = ["id", "user", "created_at"]
 
     def create(self, validated_data: Dict[str, Any]) -> Subscription:
         request: Optional[Request] = self.context.get("request")
