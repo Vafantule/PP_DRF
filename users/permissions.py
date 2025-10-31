@@ -50,7 +50,10 @@ class IsOwnerOrModeratorOrAdmin(BasePermission):
 
         is_moderator = self._is_moderator(user)
 
-        if request.method in SAFE_METHODS or request.method in ("PUT", "PATCH"):
+        if request.method in SAFE_METHODS:
+            return True
+
+        if request.method in ("PUT", "PATCH"):
             owner = getattr(obj, "owner", None)
             if owner is None:
                 return False

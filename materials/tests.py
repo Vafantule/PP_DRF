@@ -156,3 +156,10 @@ class LessonAPITest(APITestCase):
         }
         response_custom = self.client.post(self.lesson_create_url, payload, format="json")
         self.assertEqual(response_custom.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_any_authenticated_can_retrieve_lesson_detail(self) -> None:
+        self.auth_as(self.other)
+        response_custom = self.client.get(self.lesson_detail_url(self.lesson_owned.id))
+        self.assertEqual(response_custom.status_code, status.HTTP_200_OK)
+        data = response_custom.json()
+        self.assertEqual(data.get("id"), self.lesson_owned.id)
