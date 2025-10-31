@@ -79,4 +79,4 @@ class CourseAPITests(APITestCase):
         self.auth_as(self.user_owner)
         response_custom = self.client.delete(self.course_detail_url(temp.id))
         self.assertIn(response_custom.status_code, (status.HTTP_204_NO_CONTENT, status.HTTP_200_OK))
-        self.assertEqual(Course.objects.filter(pk=temp.id).exists())
+        self.assertFalse(Course.objects.filter(pk=temp.id).exists())
