@@ -57,3 +57,11 @@ class CourseAPITests(APITestCase):
         payload = {"title": "Модератор курса", "description": "Запрещено"}
         response_custom = self.client.post(self.courses_list_url, payload, format="json")
         self.assertEqual(response_custom.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_superuser_can_create_course(self) -> None:
+        self.auth_as(self.superuser)
+        payload = {"title": "Администратор курса", "description": "Описание"}
+        response_custom = self.client.post(self.courses_list_url, payload, format="json")
+        self.assertEqual(response_custom.status_code, status.HTTP_201_CREATED)
+        data = response_custom.json()
+        self.assertEqual(int(data.get("owner")), self.superuser.id)
