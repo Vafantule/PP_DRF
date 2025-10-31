@@ -21,7 +21,7 @@ class CourseAPITests(APITestCase):
         cls.user_owner: User = User.objects.create_user(email="owner@example.com", password="ownerpassword")
         cls.user_other: User = User.objects.create_user(email="other@example.com", password="otherpassword")
 
-        moderators_group = Group.objects.get_or_create(name="moderators")
+        moderators_group, _ = Group.objects.get_or_create(name="moderators")
         moderators_group.user_set.add(cls.moderator)
 
         cls.course_owner: Course = Course.objects.create(
@@ -30,14 +30,14 @@ class CourseAPITests(APITestCase):
             owner=cls.user_owner
         )
 
-        cls.courses_list_url: str = "/materials/courses/"
-        cls.course_detail_irl = lambda pk: f"/materials/course/{pk}"
+        cls.courses_list_url: str = "/courses/"
+        cls.course_detail_irl = lambda pk: f"/course/{pk}"
 
     def setUp(self) -> None:
         self.client: APIClient= self.client
 
     def auth_as(self, user: Optional[User]) -> None:
-        if user in None:
+        if user is None:
             self.client.force_authenticate(user=None)
         else:
             self.client.force_authenticate(user=user)
