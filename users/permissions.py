@@ -30,13 +30,13 @@ class IsOwnerOrModeratorOrAdmin(BasePermission):
         if request.method in SAFE_METHODS or request.method in ("PUT", "PATCH"):
             return True
 
-        if request.method == "POST":
+        if request.method == "POST" or request.method == "DELETE":
             return not is_moderator
 
-        if request.method == "DELETE":
-            if is_moderator:
-                return False
-            return getattr(user, "is_staff", False) or getattr(user, "is_superuser", False)
+        # if request.method == "DELETE":
+        #     if is_moderator:
+        #         return False
+        #     return getattr(user, "is_staff", False) or getattr(user, "is_superuser", False)
 
         return False
 
