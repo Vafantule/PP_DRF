@@ -73,3 +73,10 @@ class CourseAPITests(APITestCase):
         self.assertIn(response_custom.status_code, (status.HTTP_200_OK, status.HTTP_202_ACCEPTED))
         self.course_owned.refresh_from_db()
         self.assertEqual(self.course_owned.title, "Обновлено")
+
+    def test_owner_can_delete_own_course(self) -> None:
+        temp = Course.objects.create(title="Курс для теста", description="Тесты", owner=self.user_owner)
+        self.auth_as(self.user_owner)
+        response_custom = self.client.delete(self.course_detail_url(temp.id))
+        self.assertIn(response_custom.status_code, (status.HTTP_204_NO_CONTENT, status.HTTP_200_OK))
+        self.assertEqual(Course.objects.filter(pk=temp.id).exists())
