@@ -253,3 +253,10 @@ class SubscriptionAPITest(APITestCase):
         response_custom = self.client.delete(self.subscription_url(self.course.id))
         self.assertIn(response_custom.status_code, (status.HTTP_204_NO_CONTENT, status.HTTP_200_OK))
         self.assertFalse(Subscription.objects.filter(user=self.user_subscriber, course=self.course).exists())
+
+    def unsubscribe_idempotent_when_not_present(self) -> None:
+        self.auth_as(self.user_subscriber)
+        Subscription.objects.filter(user=self.user_subscriber, course=self.course).delete()
+        response_custom = self.client.delete(self.subscription_url(self.course.id))
+        self.assertIn(response_custom.status_code, (status.HTTP_204_NO_CONTENT, status.HTTP_200_OK))
+        self.assertFalse(Subscription.objects.filter(user=self.user_subscriber, course=self.course).exists())
