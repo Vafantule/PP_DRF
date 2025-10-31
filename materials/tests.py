@@ -52,3 +52,8 @@ class CourseAPITests(APITestCase):
             self.assertEqual(int(data.get("owner")), self.user_other.id)
             self.assertTrue(Course.objects.filter(pk=data.get("id"), owner=self.user_other).exists())
 
+    def test_moderator_cannot_create_course(self) -> None:
+        self.auth_as(self.moderator)
+        payload = {"title": "Модератор курса", "description": "Запрещено"}
+        response_custom = self.client.post(self.courses_list_url, payload, format="json")
+        self.assertEqual(response_custom.status_code, status.HTTP_403_FORBIDDEN)
