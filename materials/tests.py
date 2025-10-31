@@ -2,6 +2,7 @@ from typing import Optional, Dict, Any
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.status import HTTP_201_CREATED
 from rest_framework.test import APITestCase, APIClient
@@ -92,7 +93,6 @@ class LessonAPITest(APITestCase):
     """
     Тесты для Lesson CRUD.
     """
-
     @classmethod
     def setUpTestData(cls) -> None:
         cls.superuser: User = User.objects.create_superuser(email="admin@example.com", password="adminpassword")
@@ -116,8 +116,11 @@ class LessonAPITest(APITestCase):
             video_url="https://www.youtube.com/watch?v=qwerty321",
         )
 
-        cls.lessons_list_url: str = "/lessons/"
-        cls.lesson_detail_url = lambda pk: f"/lessons/{pk}/"
+        cls.lessons_list_url: str = reverse("materials:lessons_list")
+        cls.lesson_create_url: str = reverse("materials:lesson_create")
+        cls.lesson_detail_url = lambda pk: reverse("materials:lesson_retrieve", args=[pk])
+        cls.lesson_update_url = lambda pk: reverse("materials:lesson_update", args=[pk])
+        cls.lesson_delete_url = lambda pk: reverse("materials:lesson_delete", args=[pk])
 
     def setUp(self) -> None:
         self.client: APIClient= self.client
@@ -136,8 +139,8 @@ class LessonAPITest(APITestCase):
             "course": self.course.id,
             "video_url": "https://youtube.com/qwerty321",
         }
-        response_custom = self.client.post(self.lessons_list_url, payload, format="json")
-        self.assertIn(response_custom.status_code, (HTTP_201_CREATED, status.HTTP_200_OK))
+        response_custom = self.client.post(self.lesson_create_url, payload, format="json")
+        self.assertIn(response_custom.status_code, (status.HTTP_201_CREATED, status.HTTP_200_OK))
         if response_custom.status_code == status.HTTP_201_CREATED:
             data = response_custom.json()
             self.assertEqual(int(data.get("owner")), self.owner.id)
