@@ -65,3 +65,12 @@ class CourseAPITests(APITestCase):
         self.assertEqual(response_custom.status_code, status.HTTP_201_CREATED)
         data = response_custom.json()
         self.assertEqual(int(data.get("owner")), self.superuser.id)
+
+    def test_owner_can_update_own_course(self) -> None:
+        self.auth_as(self.user_owner)
+        response_custom = self.client.patch(self.course_detail_irl(self.course_owned.id),
+                                            {"title": "Обновлено"}, format="json")
+        self.assertIn(response_custom, (status.HTTP_200_OK, status.HTTP_202_ACCEPTED))
+        self.course_owned.refresh_from_db(
+            self.assertEqual(self.course_owned.title, "Обновлено")
+        )
