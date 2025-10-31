@@ -145,3 +145,14 @@ class LessonAPITest(APITestCase):
             data = response_custom.json()
             self.assertEqual(int(data.get("owner")), self.owner.id)
             self.assertTrue(Lesson.objects.filter(pk=data.get("id"), owner=self.owner). exists())
+
+    def test_moderator_cannot_create_lesson(self) -> None:
+        self.auth_as(self.moderator)
+        payload = {
+            "title": "Модератор урока",
+            "description": "Запрещено",
+            "course": self.course.id,
+            "video_url": "https://www.youtube.com/watch?v=mod123",
+        }
+        response_custom = self.client.post(self.lesson_create_url, payload, format="json")
+        self.assertEqual(response_custom.status_code, status.HTTP_403_FORBIDDEN)
