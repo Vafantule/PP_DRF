@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.status import HTTP_201_CREATED
 from rest_framework.test import APITestCase, APIClient
 
-from .models import Course, Lesson
+from .models import Course, Lesson, Subscription
 
 User = get_user_model()
 
@@ -201,7 +201,39 @@ class LessonAPITest(APITestCase):
         response_custom = self.client.delete(self.lesson_delete_url(self.lesson_owned.id))
         self.assertEqual(response_custom.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_owner_cannot_delete_not_owned_lesson(self) -> None:
+    def test_other_cannot_delete_not_owned_lesson(self) -> None:
         self.auth_as(self.other)
         response_custom = self.client.delete(self.lesson_delete_url(self.lesson_owned.id))
         self.assertEqual(response_custom.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class SubscriptionAPITest(APITestCase):
+    """
+    Тесты для Subscription.
+    """
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.user_subscriber: User = User.objects.create_user(email="subscriber@example.com", password="subpassword")
+        cls.course_owner: User = User.objects.create_user(email="owner2@example.com", password="ownerpassword2")
+        cls.course: Course = Course.objects.create(
+            title="Подписка на курс",
+            description="Описание подписки на курс",
+            owner=cls.course_owner
+        )
+
+        cls.subscription_url = lambda course_id: f"/courses/{course_id}/subscription/"
+
+    def setUp(self) -> None:
+        self.client: APIClient = self.client
+
+    def auth_as(self, user: Optional[User]) -> None:
+        if user is None:
+            self.client.force_authenticate(user=None)
+        else:
+            self.client.force_authenticate(user=user)
+
+    def test_subscribe_creates_subscription(self) -> None:
+        self.auth_as(self.user_subscriber)
+        response_custom = self.client.post(self.subscription_url(self.course.id))
+        self.assertIn(response_custom.status_code, (status.HTTP_201_CREATED, status.HTTP_200_OK))
+        self.assertTrue(Subscription.objects.filter(user=self.user_subscriber, course=self.course).exists())
