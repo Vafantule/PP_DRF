@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from .models import Course, Lesson, Subscription
 from .serializers import CourseSerializer, LessonSerializer, CourseSubscriptionSerializer
+from .pagination import CourseLessonPagination
 from users.permissions import IsOwnerOrModeratorOrAdmin
 
 
@@ -18,6 +19,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all().prefetch_related("lessons")
     serializer_class = CourseSerializer
     permission_classes = [IsOwnerOrModeratorOrAdmin]
+    pagination_class = CourseLessonPagination
 
     def get_queryset(self) -> QuerySet[Course]:
         queryset_custom = super().get_queryset()
@@ -41,6 +43,7 @@ class LessonListAPIView(generics.ListAPIView):
     queryset = Lesson.objects.all().select_related("course")
     serializer_class = LessonSerializer
     permission_classes = [IsOwnerOrModeratorOrAdmin]
+    pagination_class = CourseLessonPagination
 
     def get_queryset(self) -> QuerySet[Lesson]:
         queryset_custom = super().get_queryset()
@@ -63,6 +66,7 @@ class LessonCreateAPIView(generics.CreateAPIView):
     """
     serializer_class = LessonSerializer
     permission_classes = [IsOwnerOrModeratorOrAdmin]
+    pagination_class = CourseLessonPagination
 
     def perform_create(self, serializer: LessonSerializer) -> None:
         request_user = getattr(self.request, "user", None)
