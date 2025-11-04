@@ -1,8 +1,14 @@
 from django.db.models import QuerySet
-from rest_framework import generics, viewsets
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from materials.models import Course, Lesson
-from materials.serializers import CourseSerializer, LessonSerializer
+from .models import Course, Lesson, Subscription
+from .serializers import CourseSerializer, LessonSerializer, CourseSubscriptionSerializer
+from .pagination import CourseLessonPagination
 from users.permissions import IsOwnerOrModeratorOrAdmin
 
 
@@ -13,6 +19,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all().prefetch_related("lessons")
     serializer_class = CourseSerializer
     permission_classes = [IsOwnerOrModeratorOrAdmin]
+    pagination_class = CourseLessonPagination
 
     def get_queryset(self) -> QuerySet[Course]:
         queryset_custom = super().get_queryset()
@@ -36,6 +43,7 @@ class LessonListAPIView(generics.ListAPIView):
     queryset = Lesson.objects.all().select_related("course")
     serializer_class = LessonSerializer
     permission_classes = [IsOwnerOrModeratorOrAdmin]
+    pagination_class = CourseLessonPagination
 
     def get_queryset(self) -> QuerySet[Lesson]:
         queryset_custom = super().get_queryset()
@@ -58,6 +66,7 @@ class LessonCreateAPIView(generics.CreateAPIView):
     """
     serializer_class = LessonSerializer
     permission_classes = [IsOwnerOrModeratorOrAdmin]
+    pagination_class = CourseLessonPagination
 
     def perform_create(self, serializer: LessonSerializer) -> None:
         request_user = getattr(self.request, "user", None)
@@ -88,3 +97,24 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
     """
     queryset = Lesson.objects.all().select_related("course")
     permission_classes = [IsOwnerOrModeratorOrAdmin]
+
+
+class CourseSubscriptionAPIView(APIView):
+    """
+    Контроллер APIView для подписки/отписки пользователя на курс.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request, course_id: int) -> Response:
+        course = get_object_or_404(Course, pk=course_id)
+        subscription, created =Subscription.objects.get_or_create(user=request.user, course=course)
+        serializer = CourseSubscriptionSerializer(subscription, context={"request": request})
+        status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(serializer.data, status=status_code)
+
+    def delete(self, request: Request, course_id: int) -> Response:
+        course = get_object_or_404(Course, pk=course_id)
+        deleted_count, _details = Subscription.objects.filter(user=request.user, course=course).delete()
+        if deleted_count:
+            return Response({"detail": "Подписка удалена."}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "Подписки не было."}, status=status.HTTP_200_OK)
