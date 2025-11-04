@@ -20,3 +20,20 @@ def _raise_for_status(response: Response) -> None:
         except Exception:
             body = response.text
         raise requests.HTTPError(f"f{exception}; ответ={body}") from exception
+
+
+def create_product(name: str, description: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Функция создания продукта в Stripe.
+    """
+    if not STRIPE_API_KEY:
+        raise ValueError("STRIPE_API_KEY не задано.")
+
+    url = f"{STRIPE_API_BASE}/products"
+    data: Dict[str, Any] = {"name": name}
+    if description:
+        data["description"] = description
+
+    response = requests.post(url, data=data, auth=(STRIPE_API_KEY, ""))
+    _raise_for_status(response)
+    return response.json()
