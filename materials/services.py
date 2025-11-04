@@ -40,8 +40,7 @@ def create_product(name: str, description: Optional[str] = None) -> Dict[str, An
 
 
 def create_price(product_id: str, unit_amount: int, currency: str = "rub",
-                 billing: Optional[Dict[str, Any]] = None) \
-        -> None:
+                 billing: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Функция создания цены продукта.
     """
@@ -57,6 +56,32 @@ def create_price(product_id: str, unit_amount: int, currency: str = "rub",
     if billing:
         for key, value in billing.items():
             data[f"расчетный период[{key}]"] = value
+
+    response = requests.post(url, data=data, auth=(STRIPE_API_KEY, ""))
+    _raise_for_status(response)
+    return response.json()
+
+
+def create_checkout_session(price_id: str, success_url: str, cancel_url: str,
+                            metadata: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    """
+    Функция создания сессии для получения ссылки на оплату.
+    """
+    if not STRIPE_API_KEY:
+        raise ValueError("STRIPE_API_KEY не задано.")
+
+    url = f"{STRIPE_API_BASE}/checkout/sessions"
+    data: Dict[str, Any] = {
+        "mode": "payment",
+        "success_url": success_url,
+        "cancel_url": cancel_url,
+        "line_items[0][price]": price_id,
+        "line_items[0][quantity]": "1",
+    }
+
+    if metadata:
+        for key, value in metadata.items():
+            data[f"данные[{key}]"] = value
 
     response = requests.post(url, data=data, auth=(STRIPE_API_KEY, ""))
     _raise_for_status(response)
