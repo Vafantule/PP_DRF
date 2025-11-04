@@ -86,3 +86,16 @@ def create_checkout_session(price_id: str, success_url: str, cancel_url: str,
     response = requests.post(url, data=data, auth=(STRIPE_API_KEY, ""))
     _raise_for_status(response)
     return response.json()
+
+
+def retrieve_session(session_id: str) -> Dict[str, Any]:
+    """
+    Функция получения информации о сессии по id.
+    """
+    if not STRIPE_API_KEY:
+        raise ValueError("STRIPE_API_KEY не задано.")
+
+    url = f"{STRIPE_API_BASE}/checkout/sessions/{session_id}"
+    response = requests.get(url, auth=(STRIPE_API_KEY, ""))
+    _raise_for_status(response)
+    return response.json()
