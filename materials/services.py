@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Optional, Dict, Any
 
@@ -6,6 +7,16 @@ from requests import Response
 
 STRIPE_API_BASE: str = "https://api.stripe.com/v1"
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY", "")
+MISSING_STRIPE_KEY_ERROR: str = "STRIPE_API_KEY не задано"
+
+
+def ensure_stripe_key() -> None:
+    """
+    Функция выброса ValueError, если ключ не задан.
+    """
+    if not STRIPE_API_KEY:
+        raise ValueError(MISSING_STRIPE_KEY_ERROR)
+
 
 def _raise_for_status(response: Response) -> None:
     """
@@ -14,20 +25,18 @@ def _raise_for_status(response: Response) -> None:
     try:
         response.raise_for_status()
     except requests.HTTPError as exception:
-        body = ""
         try:
-            body = response.json()
-        except Exception:
+            body: Any = response.json()
+        except json.JSONDecodeError:
             body = response.text
-        raise requests.HTTPError(f"f{exception}; ответ={body}") from exception
+        raise requests.HTTPError(f"{exception}; response_body={body}") from exception
 
 
 def create_product(name: str, description: Optional[str] = None) -> Dict[str, Any]:
     """
     Функция создания продукта в Stripe.
     """
-    if not STRIPE_API_KEY:
-        raise ValueError("STRIPE_API_KEY не задано.")
+    ensure_stripe_key()
 
     url = f"{STRIPE_API_BASE}/products"
     data: Dict[str, Any] = {"name": name}
@@ -44,8 +53,7 @@ def create_price(product_id: str, unit_amount: int, currency: str = "rub",
     """
     Функция создания цены продукта.
     """
-    if not STRIPE_API_KEY:
-        raise ValueError("STRIPE_API_KEY не задано.")
+    ensure_stripe_key()
 
     url = f"{STRIPE_API_BASE}/prices"
     data: Dict[str, Any] = {
@@ -67,8 +75,7 @@ def create_checkout_session(price_id: str, success_url: str, cancel_url: str,
     """
     Функция создания сессии для получения ссылки на оплату.
     """
-    if not STRIPE_API_KEY:
-        raise ValueError("STRIPE_API_KEY не задано.")
+    ensure_stripe_key()
 
     url = f"{STRIPE_API_BASE}/checkout/sessions"
     data: Dict[str, Any] = {
@@ -92,8 +99,7 @@ def retrieve_session(session_id: str) -> Dict[str, Any]:
     """
     Функция получения информации о сессии по id.
     """
-    if not STRIPE_API_KEY:
-        raise ValueError("STRIPE_API_KEY не задано.")
+    ensure_stripe_key()
 
     url = f"{STRIPE_API_BASE}/checkout/sessions/{session_id}"
     response = requests.get(url, auth=(STRIPE_API_KEY, ""))
