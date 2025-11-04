@@ -37,3 +37,27 @@ def create_product(name: str, description: Optional[str] = None) -> Dict[str, An
     response = requests.post(url, data=data, auth=(STRIPE_API_KEY, ""))
     _raise_for_status(response)
     return response.json()
+
+
+def create_price(product_id: str, unit_amount: int, currency: str = "rub",
+                 billing: Optional[Dict[str, Any]] = None) \
+        -> None:
+    """
+    Функция создания цены продукта.
+    """
+    if not STRIPE_API_KEY:
+        raise ValueError("STRIPE_API_KEY не задано.")
+
+    url = f"{STRIPE_API_BASE}/prices"
+    data: Dict[str, Any] = {
+        "product": product_id,
+        "unit_amount": str(unit_amount),
+        "currency": currency
+    }
+    if billing:
+        for key, value in billing.items():
+            data[f"расчетный период[{key}]"] = value
+
+    response = requests.post(url, data=data, auth=(STRIPE_API_KEY, ""))
+    _raise_for_status(response)
+    return response.json()
