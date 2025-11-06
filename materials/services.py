@@ -3,11 +3,14 @@ import os
 from typing import Optional, Dict, Any
 
 import requests
-from requests import Response
+from requests import Response, Timeout, RequestException
 
 STRIPE_API_BASE: str = "https://api.stripe.com/v1"
-STRIPE_API_KEY = os.getenv("STRIPE_API_KEY", "")
+STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 MISSING_STRIPE_KEY_ERROR: str = "STRIPE_API_KEY не задано"
+
+REQUEST_TIMEOUT = (5, 30)
+HEADERS: Dict[str, str] = {"Authorization": f"Bearer {STRIPE_API_KEY}"}
 
 
 def ensure_stripe_key() -> None:
@@ -32,6 +35,34 @@ def _raise_for_status(response: Response) -> None:
         raise requests.HTTPError(f"{exception}; response_body={body}") from exception
 
 
+def _post(url: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Функция выполнения POST-запроса.
+    """
+    try:
+        response = requests.post(url, data=data, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+    except Timeout as exception:
+        raise Timeout(f"Timeout при запросе к {url}: {exception}") from exception
+    except RequestException as exception:
+        raise RequestException(f"Ошибка запроса к {url}: {exception}") from exception
+    _raise_for_status(response)
+    return response.json()
+
+
+def _get(url: str) -> Dict[str, Any]:
+    """
+    Функция выполнения GET-запроса.
+    """
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+    except Timeout as exception:
+        raise Timeout(f"Timeout при запросе к {url}: {exception}") from exception
+    except RequestException as exception:
+        raise RequestException(f"Ошибка запроса к {url}: {exception}") from exception
+    _raise_for_status(response)
+    return response.json()
+
+
 def create_product(name: str, description: Optional[str] = None) -> Dict[str, Any]:
     """
     Функция создания продукта в Stripe.
@@ -43,9 +74,7 @@ def create_product(name: str, description: Optional[str] = None) -> Dict[str, An
     if description:
         data["description"] = description
 
-    response = requests.post(url, data=data, auth=(STRIPE_API_KEY, ""))
-    _raise_for_status(response)
-    return response.json()
+    return _post(url, data)
 
 
 def create_price(product_id: str, unit_amount: int, currency: str = "rub",
@@ -63,11 +92,9 @@ def create_price(product_id: str, unit_amount: int, currency: str = "rub",
     }
     if billing:
         for key, value in billing.items():
-            data[f"расчетный период[{key}]"] = value
+            data[f"billing[{key}]"] = value
 
-    response = requests.post(url, data=data, auth=(STRIPE_API_KEY, ""))
-    _raise_for_status(response)
-    return response.json()
+    return _post(url, data)
 
 
 def create_checkout_session(price_id: str, success_url: str, cancel_url: str,
@@ -88,11 +115,9 @@ def create_checkout_session(price_id: str, success_url: str, cancel_url: str,
 
     if metadata:
         for key, value in metadata.items():
-            data[f"данные[{key}]"] = value
+            data[f"metadata[{key}]"] = value
 
-    response = requests.post(url, data=data, auth=(STRIPE_API_KEY, ""))
-    _raise_for_status(response)
-    return response.json()
+    return _post(url, data)
 
 
 def retrieve_session(session_id: str) -> Dict[str, Any]:
@@ -102,6 +127,4 @@ def retrieve_session(session_id: str) -> Dict[str, Any]:
     ensure_stripe_key()
 
     url = f"{STRIPE_API_BASE}/checkout/sessions/{session_id}"
-    response = requests.get(url, auth=(STRIPE_API_KEY, ""))
-    _raise_for_status(response)
-    return response.json()
+    return _get(url)

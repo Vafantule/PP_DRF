@@ -128,7 +128,7 @@ class PaymentCreateAPIView(generics.CreateAPIView):
     Контроллер создания платежа.
     """
     serializer_class = PaymentSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer: PaymentSerializer) -> None:
         payment: Payment = serializer.save()
@@ -183,6 +183,12 @@ class PaymentSessionStatusAPIView(generics.GenericAPIView):
     """
     permission_classes = [AllowAny]
 
-    def get(self, session_id: str) -> Response:
+    def get(self, *args: Any, **kwargs: Any) -> Response:
+        session_id = kwargs.get("session_id")
+        if not session_id and args:
+            session_id = args[0]
+        if not session_id:
+            return Response({"detail": "session_id обязателен"}, status=status.HTTP_400_BAD_REQUEST)
+
         session = retrieve_session(session_id=session_id)
         return Response(session, status=status.HTTP_200_OK)
