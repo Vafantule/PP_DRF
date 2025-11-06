@@ -1,9 +1,9 @@
 import json
 import os
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 import requests
-from requests import Response, Timeout, RequestException
+from requests import RequestException, Response, Timeout
 
 STRIPE_API_BASE: str = "https://api.stripe.com/v1"
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")

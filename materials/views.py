@@ -1,18 +1,19 @@
-from typing import Dict, Any
+from typing import Any, Dict
 
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, viewsets, status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import generics, status, viewsets
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Course, Lesson, Subscription, Payment
-from .serializers import CourseSerializer, LessonSerializer, CourseSubscriptionSerializer, PaymentSerializer
-from .pagination import CourseLessonPagination
 from users.permissions import IsOwnerOrModeratorOrAdmin
-from .services import create_product, create_price, create_checkout_session, retrieve_session
+
+from .models import Course, Lesson, Payment, Subscription
+from .pagination import CourseLessonPagination
+from .serializers import CourseSerializer, CourseSubscriptionSerializer, LessonSerializer, PaymentSerializer
+from .services import create_checkout_session, create_price, create_product, retrieve_session
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -110,7 +111,7 @@ class CourseSubscriptionAPIView(APIView):
 
     def post(self, request: Request, course_id: int) -> Response:
         course = get_object_or_404(Course, pk=course_id)
-        subscription, created =Subscription.objects.get_or_create(user=request.user, course=course)
+        subscription, created = Subscription.objects.get_or_create(user=request.user, course=course)
         serializer = CourseSubscriptionSerializer(subscription, context={"request": request})
         status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
         return Response(serializer.data, status=status_code)
