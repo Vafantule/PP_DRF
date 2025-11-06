@@ -1,9 +1,10 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
+from users.views import PaymentViewSet
 from .apps import MaterialsConfig
 from .views import (CourseViewSet, LessonCreateAPIView, LessonDestroyAPIView, LessonListAPIView, LessonRetrieveAPIView,
-                    LessonUpdateAPIView, CourseSubscriptionAPIView)
+                    LessonUpdateAPIView, CourseSubscriptionAPIView, PaymentSessionStatusAPIView)
 
 app_name = MaterialsConfig.name
 
@@ -16,5 +17,7 @@ urlpatterns = [
     path("lessons/<int:pk>/", LessonRetrieveAPIView.as_view(), name="lesson_retrieve"),
     path("lessons/<int:pk>/update/", LessonUpdateAPIView.as_view(), name="lesson_update"),
     path("lessons/<int:pk>/delete/", LessonDestroyAPIView.as_view(), name="lesson_delete"),
-    path("courses/<int:course_id>/subscription/", CourseSubscriptionAPIView.as_view(), name="course-subscription")
+    path("courses/<int:course_id>/subscription/", CourseSubscriptionAPIView.as_view(), name="course-subscription"),
+    path("payment/create/", PaymentViewSet.as_view(), name="payment-create"),
+    path("payment/sessions/<str:session_id>/", PaymentSessionStatusAPIView.as_view(), name="payment-session-status")
 ] + router.urls

@@ -177,7 +177,7 @@ class PaymentCreateAPIView(generics.CreateAPIView):
         return Response(combined_data, status=status.HTTP_201_CREATED)
 
 
-class PaymentSessionAPIView(generics.GenericAPIView):
+class PaymentSessionStatusAPIView(generics.GenericAPIView):
     """
     Контроллер получения статуса сессии по id.
     """
