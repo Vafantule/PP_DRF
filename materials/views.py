@@ -163,4 +163,15 @@ class PaymentCreateAPIView(generics.CreateAPIView):
             "stripe_session": session_response,
         }
 
-
+    def create(self, request, *args: Any, **kwargs: Any) -> Response:
+        response = super().create(request, *args, **kwargs)
+        payment = Payment.objects.get(pk=response.data["id"])
+        extra_data = {
+            "stripe_session_url": payment.stripe_session_url,
+            "stripe_session_id": payment.stripe_session_id,
+            "stripe_product_id": payment.stripe_product_id,
+            "stripe_price_id": payment.stripe_price_id,
+            "status": payment.status,
+        }
+        combined_data = {**response.data, **extra_data}
+        return Response(combined_data, status=status.HTTP_201_CREATED)
