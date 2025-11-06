@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional
 from rest_framework import serializers
 from rest_framework.request import Request
 
-from .models import Course, Lesson, Subscription
+from .models import Course, Lesson, Subscription, Payment
 from .validators import VideoDomainValidator
 
 
@@ -58,3 +58,28 @@ class CourseSubscriptionSerializer(serializers.ModelSerializer):
         course = validated_data["course"]
         subscription, _created = Subscription.objects.get_or_create(user=user, course=course)
         return subscription
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор записи платежа.
+    """
+    class Meta:
+        model = Payment
+        fields = ["id", "user", "course", "amount", "currency", "stripe_session_url", "stripe_session_id"]
+        read_only_fields = ["id", "user", "stripe_session_url", "stripe_session_id"]
+
+    amount = serializers.IntegerField(min_value=1)
+    currency = serializers.CharField(default="rub", required=False)
+
+    def validate_course(self, value: Course) -> Course:
+        if value is None:
+            raise serializers.ValidationError("Неправильный курс")
+        return value
+
+    def create(self, validated_data: Dict[str, Any]) -> Payment:
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        validated_data["user"] = user
+        payment = super().create(validated_data)
+        return payment

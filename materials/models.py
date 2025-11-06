@@ -72,3 +72,27 @@ class Subscription(models.Model):
 
     def __str__(self):
         return f"Подписка (пользователь={self.user_id}, курс={self.course_id})"
+
+
+class Payment(models.Model):
+    """
+    Модель платежа.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="платежи")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="платежи")
+    amount = models.PositiveIntegerField(help_text="Сумма в рублях")
+    currency = models.CharField(max_length=10, default="rub")
+    stripe_product_id = models.CharField(max_length=255, blank=True, null=True)
+    stripe_price_id = models.CharField(max_length=255, blank=True, null=True)
+    stripe_session_id = models.CharField(max_length=255, blank=True, null=True)
+    stripe_session_url = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=32, default="создан")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Платеж"
+        verbose_name_plural = "Платежи"
+
+    def __str__(self) -> str:
+        return f"Платеж (номер={self.pk}, пользователь={self.user_id}, курс={self.course_id}, сумма={self.amount})"
+
