@@ -85,7 +85,7 @@ class Payment(models.Model):
     stripe_product_id = models.CharField(max_length=255, blank=True, null=True)
     stripe_price_id = models.CharField(max_length=255, blank=True, null=True)
     stripe_session_id = models.CharField(max_length=255, blank=True, null=True)
-    stripe_session_url = models.URLField(blank=True, null=True)
+    stripe_session_url = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=32, default="создан")
     created_at = models.DateTimeField(auto_now_add=True)
 
