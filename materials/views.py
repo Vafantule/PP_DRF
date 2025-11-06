@@ -12,7 +12,7 @@ from .models import Course, Lesson, Subscription, Payment
 from .serializers import CourseSerializer, LessonSerializer, CourseSubscriptionSerializer, PaymentSerializer
 from .pagination import CourseLessonPagination
 from users.permissions import IsOwnerOrModeratorOrAdmin
-from .services import create_product, create_price, create_checkout_session
+from .services import create_product, create_price, create_checkout_session, retrieve_session
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -175,3 +175,14 @@ class PaymentCreateAPIView(generics.CreateAPIView):
         }
         combined_data = {**response.data, **extra_data}
         return Response(combined_data, status=status.HTTP_201_CREATED)
+
+
+class PaymentSessionAPIView(generics.GenericAPIView):
+    """
+    Контроллер получения статуса сессии по id.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, session_id: str) -> Response:
+        session = retrieve_session(session_id=session_id)
+        return Response(session, status=status.HTTP_200_OK)
