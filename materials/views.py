@@ -1,15 +1,18 @@
+from typing import Dict, Any
+
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, viewsets, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Course, Lesson, Subscription
-from .serializers import CourseSerializer, LessonSerializer, CourseSubscriptionSerializer
+from .models import Course, Lesson, Subscription, Payment
+from .serializers import CourseSerializer, LessonSerializer, CourseSubscriptionSerializer, PaymentSerializer
 from .pagination import CourseLessonPagination
 from users.permissions import IsOwnerOrModeratorOrAdmin
+from .services import create_product, create_price, create_checkout_session
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -118,3 +121,46 @@ class CourseSubscriptionAPIView(APIView):
         if deleted_count:
             return Response({"detail": "Подписка удалена."}, status=status.HTTP_204_NO_CONTENT)
         return Response({"detail": "Подписки не было."}, status=status.HTTP_200_OK)
+
+
+class PaymentCreateAPIView(generics.CreateAPIView):
+    """
+    Контроллер создания платежа.
+    """
+    serializer_class = PaymentSerializer
+    permission_classes = [AllowAny]
+
+    def perform_create(self, serializer: PaymentSerializer) -> None:
+        payment: Payment = serializer.save()
+        course = payment.course
+
+        product_response = create_product(name=course.title, description=course.description)
+        product_id = product_response.get("id")
+        price_response = create_price(product_id=product_id, unit_amount=payment.amount, currency=payment.currency)
+        price_id = price_response.get("id")
+
+        success_url = self.request.build_absolute_uri("/")
+        cancel_url = self.request.build_absolute_uri("/")
+        session_response = create_checkout_session(
+            price_id=price_id,
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={"payment_id": str(payment.id)}
+        )
+        session_id = session_response.get("id")
+        session_url = session_response.get("url")
+
+        payment.stripe_product_id = product_id
+        payment.stripe_price_id = price_id
+        payment.stripe_session_id = session_id
+        payment.stripe_session_url = session_url
+        payment.status = session_response.get("payment_status", payment.status) or payment.status
+        payment.save()
+
+        self._stripe_result: Dict[str, Any] = {
+            "stripe_product": product_response,
+            "stripe_price": price_response,
+            "stripe_session": session_response,
+        }
+
+
