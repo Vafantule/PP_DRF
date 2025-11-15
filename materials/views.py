@@ -1,7 +1,9 @@
+from datetime import timedelta
 from typing import Any, Dict
 
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -14,6 +16,7 @@ from .models import Course, Lesson, Payment, Subscription
 from .pagination import CourseLessonPagination
 from .serializers import CourseSerializer, CourseSubscriptionSerializer, LessonSerializer, PaymentSerializer
 from .services import create_checkout_session, create_price, create_product, retrieve_session
+from .tasks import send_course_update_notifications
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -93,6 +96,22 @@ class LessonUpdateAPIView(generics.UpdateAPIView):
     queryset = Lesson.objects.all().select_related("course")
     serializer_class = LessonSerializer
     permission_classes = [IsOwnerOrModeratorOrAdmin]
+
+    def perform_update(self, serializer: LessonSerializer) -> None:
+        lesson : Lesson = serializer.save()
+        course: Course = lesson.course
+
+        now = timezone.now()
+        can_notify = False
+        if course.last_notification_sent is None:
+            can_notify = True
+        else:
+            if now - course.last_notification_sent >= timedelta(hours=4):
+                can_notify = True
+
+        if can_notify:
+            update_summary: str = f"Урок '{lesson.title}' был обновлён."
+            send_course_update_notifications.delay(course.id, update_summary)
 
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
