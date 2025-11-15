@@ -1,6 +1,6 @@
 import logging
 from datetime import timedelta
-from typing import Dict, Any
+from typing import Any, Dict
 
 from celery import shared_task
 from django.contrib.auth import get_user_model
@@ -9,8 +9,9 @@ from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
-@shared_task(bind=True, name="users.task.deactivate_inactive_users")
-def deactivate_inactive_users(self, days:int = 30) -> Dict[str, Any]:
+
+@shared_task(bind=True, name="users.tasks.deactivate_inactive_users")
+def deactivate_inactive_users(self, days: int = 30) -> Dict[str, Any]:
     """
     Функция деактивации неактивных (больше 30 дней) пользователей.
     """
