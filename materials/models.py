@@ -95,4 +95,3 @@ class Payment(models.Model):
 
     def __str__(self) -> str:
         return f"Платеж (номер={self.pk}, пользователь={self.user_id}, курс={self.course_id}, сумма={self.amount})"
-

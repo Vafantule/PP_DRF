@@ -1,11 +1,10 @@
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.status import HTTP_201_CREATED
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.test import APIClient, APITestCase
 
 from .models import Course, Lesson, Subscription
 
@@ -36,7 +35,7 @@ class CourseAPITests(APITestCase):
         cls.course_detail_url = lambda pk: f"/courses/{pk}/"
 
     def setUp(self) -> None:
-        self.client: APIClient= self.client
+        self.client: APIClient = self.client
 
     def auth_as(self, user: Optional[User]) -> None:
         if user is None:
@@ -123,7 +122,7 @@ class LessonAPITest(APITestCase):
         cls.lesson_delete_url = lambda pk: reverse("materials:lesson_delete", args=[pk])
 
     def setUp(self) -> None:
-        self.client: APIClient= self.client
+        self.client: APIClient = self.client
 
     def auth_as(self, user: Optional[User]) -> None:
         if user is None:
@@ -166,7 +165,7 @@ class LessonAPITest(APITestCase):
 
     def test_owner_can_update_own_lesson(self) -> None:
         self.auth_as(self.owner)
-        response_custom = self.client.patch(self.lesson_update_url(self.lesson_owned.id),{"title": "Обновлено"})
+        response_custom = self.client.patch(self.lesson_update_url(self.lesson_owned.id), {"title": "Обновлено"})
         self.assertIn(response_custom.status_code, (status.HTTP_200_OK, status.HTTP_202_ACCEPTED))
         self.lesson_owned.refresh_from_db()
         self.assertEqual(self.lesson_owned.title, "Обновлено")

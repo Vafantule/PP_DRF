@@ -1,5 +1,5 @@
-from typing import Iterable, Dict, Any
 import re
+from typing import Any, Dict, Iterable
 
 from django.core.validators import URLValidator
 from rest_framework import serializers

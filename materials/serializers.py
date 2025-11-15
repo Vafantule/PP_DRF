@@ -1,9 +1,9 @@
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from rest_framework import serializers
 from rest_framework.request import Request
 
-from .models import Course, Lesson, Subscription, Payment
+from .models import Course, Lesson, Payment, Subscription
 from .validators import VideoDomainValidator
 
 
@@ -42,7 +42,7 @@ class CourseSubscriptionSerializer(serializers.ModelSerializer):
     Сериализатор курса на подписку.
     """
     user = serializers.ReadOnlyField(source="user.id")
-    created_at =serializers.ReadOnlyField()
+    created_at = serializers.ReadOnlyField()
 
     class Meta:
         model = Subscription
