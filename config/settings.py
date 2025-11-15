@@ -185,8 +185,13 @@ CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 
 CELERY_BEAT_SCHEDULE = {
-    'task-name': {
+    'send_course_update_notifications': {
         'task': 'materials.tasks.send_course_update_notifications',
+        'schedule': timedelta(minutes=5),
+    },
+    'deactivate_inactive_users-daily': {
+        'task': 'users.tasks.deactivate_inactive_users',
         'schedule': timedelta(minutes=10),
+        "args": (30,),
     },
 }
