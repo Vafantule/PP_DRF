@@ -168,10 +168,10 @@ CACHES = {
 # Celery
 
 # URL-адрес брокера сообщений
-CELERY_BROKER_URL = 'redis://localhost:6379' # Например, Redis, который по умолчанию работает на порту 6379
+CELERY_BROKER_URL: str = os.environ.get("CELERY_BROKER_URL", os.environ.get("REDIS_URL", "redis://localhost:6379/1"))
 
 # URL-адрес брокера результатов, также Redis
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND: str = os.environ.get("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
 
 # Часовой пояс для работы Celery
 CELERY_TIMEZONE = "Asia/Yekaterinburg"
