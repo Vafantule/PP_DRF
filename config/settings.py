@@ -158,20 +158,22 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
 CACHE_ENABLED = True
 
+REDIS_URL = os.getenv("REDIS_URL",)
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'LOCATION': os.getenv('REDIS_URL', REDIS_URL),
     }
 }
 
 # Celery
 
 # URL-адрес брокера сообщений
-CELERY_BROKER_URL: str = os.environ.get("CELERY_BROKER_URL", os.environ.get("REDIS_URL", "redis://localhost:6379/1"))
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", os.getenv("REDIS_URL", REDIS_URL))
 
 # URL-адрес брокера результатов, также Redis
-CELERY_RESULT_BACKEND: str = os.environ.get("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
 
 # Часовой пояс для работы Celery
 CELERY_TIMEZONE = "Asia/Yekaterinburg"
@@ -184,7 +186,7 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 
 CELERY_BEAT_SCHEDULE = {
     'task-name': {
-        'task': 'myapp.tasks.my_task',  # Путь к задаче
-        'schedule': timedelta(minutes=10),  # Расписание выполнения задачи (например, каждые 10 минут)
+        'task': 'materials.tasks.send_course_update_notifications',
+        'schedule': timedelta(minutes=10),
     },
 }
