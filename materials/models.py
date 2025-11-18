@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Course(models.Model):
@@ -17,6 +18,8 @@ class Course(models.Model):
         null=True,
         blank=True,
     )
+    update_at = models.DateTimeField(auto_now=True)
+    last_notification_sent = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         verbose_name = "Курс"
@@ -24,6 +27,12 @@ class Course(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+    def should_notify_now(self, interval_hours: int = 4) -> bool:
+        if self.last_notification_sent is None:
+            return True
+        time_delta = timezone.now() - self.last_notification_sent
+        return time_delta.total_seconds() >= interval_hours * 3600
 
 
 class Lesson(models.Model):
@@ -43,6 +52,7 @@ class Lesson(models.Model):
         null=True,
         blank=True,
     )
+    update_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Урок"

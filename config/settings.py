@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -35,6 +36,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "django_filters",
     "drf_yasg",
+    "django_celery_beat",
     "materials",
     "users",
 ]
@@ -156,9 +158,40 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
 CACHE_ENABLED = True
 
+REDIS_URL = os.getenv("REDIS_URL",)
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'LOCATION': os.getenv('REDIS_URL', REDIS_URL),
     }
+}
+
+# Celery
+
+# URL-адрес брокера сообщений
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", os.getenv("REDIS_URL", REDIS_URL))
+
+# URL-адрес брокера результатов, также Redis
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+
+# Часовой пояс для работы Celery
+CELERY_TIMEZONE = "Asia/Yekaterinburg"
+
+# Флаг отслеживания выполнения задач
+CELERY_TASK_TRACK_STARTED = True
+
+# Максимальное время на выполнение задачи
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+CELERY_BEAT_SCHEDULE = {
+    'send_course_update_notifications': {
+        'task': 'materials.tasks.send_course_update_notifications',
+        'schedule': timedelta(minutes=5),
+    },
+    'deactivate_inactive_users-daily': {
+        'task': 'users.tasks.deactivate_inactive_users',
+        'schedule': timedelta(minutes=10),
+        "args": (30,),
+    },
 }
