@@ -1,0 +1,114 @@
+services:
+  web:
+    build: .
+    image: python:3.13-slim
+    env_file:
+      - .env
+    working_dir:
+      /app
+    volumes:
+      - ./:/app:delegated
+      - static_volume:/app/static
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      - db
+      - redis
+    command: >
+      bash -c "pip install --no-cache-dir -r requirements.txt &&
+               python manage.py migrate --noinput &&
+               python manage.py runserver 0.0.0.0:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  db:
+    image: postgres:17
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME} -h localhost || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7
+    env_file:
+      - .env
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  celery:
+    image: python:3.13-slim
+    env_file:
+      - .env
+    working_dir:
+      /app
+    volumes:
+      - ./:/app:delegated
+    depends_on:
+      - db
+      - redis
+      - web
+    command: >
+      bash -c "pip install --no-cache-dir -r requirements.txt &&
+               celery -A config worker --loglevel=info -P eventlet"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep -q '[c]elery' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  celery-beat:
+    image: python:3.11-slim
+    env_file:
+      - .env
+    working_dir:
+      /app
+    volumes:
+      - ./:/app:delegated
+    depends_on:
+      - db
+      - redis
+      - web
+    command: >
+      bash -c "pip install --no-cache-dir -r requirements.txt &&
+               celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "ps aux | grep -q '[c]elery' || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
