@@ -197,7 +197,7 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-if "test" in sys.argv:
+if os.getenv("CI_USE_SQLITE", "0") == "1" or "test" in sys.argv:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
