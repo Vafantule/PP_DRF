@@ -32,4 +32,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=5 \
   CMD curl --fail --silent --show-error http://127.0.0.1:8000/swagger/ || exit 1
 
 # Запускаем встроенный Django сервер
-CMD ["bash", "-c", "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"]
+# CMD ["bash", "-c", "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py gunicorn config.wsgi:application --bind 0.0.0.0:8000"]
