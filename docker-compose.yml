@@ -14,10 +14,10 @@ services:
     depends_on:
       - db
       - redis
-    command: >
-      bash -c "pip install --no-cache-dir -r requirements.txt &&
-               python manage.py migrate --noinput &&
-               python manage.py runserver 0.0.0.0:8000"
+#    command: >
+#      bash -c "pip install --no-cache-dir -r requirements.txt &&
+#               python manage.py migrate --noinput &&
+#               python manage.py runserver 0.0.0.0:8000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
