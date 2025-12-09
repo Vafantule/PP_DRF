@@ -86,11 +86,46 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Deploy to Server
+      - name: Add server to known_hosts
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
-            docker stop myapp || true
-            docker rm myapp || true
-            docker run -d --name myapp -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy to Server
+#        run: |
+#          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+#            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+#            docker stop myapp || true
+#            docker rm myapp || true
+#            docker run -d --name myapp -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+#          EOF
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} <<'EOF'
+            set -euo pipefail
+          
+            IMAGE="${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}"
+          
+            echo "Pulling image ${IMAGE}..."
+            docker pull "${IMAGE}"
+          
+            CONTAINER_ID="$(docker ps -aq -f name=^myapp$)"
+          
+            if [ -n "${CONTAINER_ID}" ]; then
+              echo "Found existing container (id=${CONTAINER_ID}). Stopping and removing..."
+              docker stop myapp
+              docker rm myapp
+            else
+              echo "Container myapp not found — ничего удалять не нужно."
+            fi
+          
+            echo "Running container myapp from ${IMAGE}..."
+            docker run -d \
+              --name myapp \
+              --restart unless-stopped \
+              -e "DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-config.settings}" \
+              -p 80:8000 \
+              "${IMAGE}"
+          
+            echo "Deploy finished."
           EOF
