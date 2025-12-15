@@ -1,0 +1,131 @@
+name: Django CI
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+
+      - name: Run Flake8
+        run: flake8 .
+
+
+  tests:
+    runs-on: ubuntu-latest
+    needs: linter
+    env:
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      CI_USE_SQLITE: "1"
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run migrations
+        run: python manage.py migrate
+
+      - name: Run tests
+        run: python manage.py test
+
+
+  build:
+    runs-on: ubuntu-latest
+    needs: tests
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Log in to Docker Hub
+        run: echo ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }} .
+
+      - name: Push Docker image to Docker Hub
+        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy to Server
+#        run: |
+#          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+#            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+#            docker stop myapp || true
+#            docker rm myapp || true
+#            docker run -d --name myapp -p 80:8000 ${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}
+#          EOF
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} <<'EOF'
+            set -euo pipefail
+          
+            IMAGE="${{ secrets.DOCKER_HUB_USERNAME }}/myapp:${{ github.sha }}"
+          
+            echo "Pulling image ${IMAGE}..."
+            docker pull "${IMAGE}"
+          
+            CONTAINER_ID="$(docker ps -aq -f name=^myapp$)"
+          
+            if [ -n "${CONTAINER_ID}" ]; then
+              echo "Found existing container (id=${CONTAINER_ID}). Stopping and removing..."
+              docker stop myapp
+              docker rm myapp
+            else
+              echo "Container myapp not found — ничего удалять не нужно."
+            fi
+          
+            echo "Running container myapp from ${IMAGE}..."
+            docker run -d \
+              --name myapp \
+              --restart unless-stopped \
+              -e "DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-config.settings}" \
+              -p 80:8000 \
+              "${IMAGE}"
+          
+            echo "Deploy finished."
+          EOF
